@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vape Tracker Pro - Blood & Ash Edition</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+<style>
+    :root {
+        --bg-dark: #0a0a0a;
+        --bg-panel: #171717;
+        --primary-red: #d32f2f;
+        --glow-red: #ff0000;
+        --text-white: #ffffff;
+        --text-grey: #9e9e9e;
+        --border-color: #333333;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: var(--bg-dark);
+        background-image: radial-gradient(circle at 50% 0%, #2a0808 0%, transparent 50%);
+        color: var(--text-white);
+        min-height: 100vh;
+        padding-bottom: 40px;
+    }
+
+    .header-container {
+        text-align: center;
+        padding: 30px 15px 15px 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    h1 {
+        font-weight: 900;
+        font-size: 2.8rem;
+        color: var(--text-white);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 0px 0px 15px rgba(255, 0, 0, 0.4);
+        margin-bottom: 10px;
+    }
+
+    h1 span {
+        color: var(--primary-red);
+    }
+
+    .btn-reset {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-grey);
+        padding: 8px 20px;
+        font-size: 0.9rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        width: auto;
+    }
+
+    .btn-reset:hover {
+        border-color: var(--glow-red);
+        color: var(--glow-red);
+        background: rgba(211, 47, 47, 0.1);
+        box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+    }
+
+    /* Layout */
+    .wrapper {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 25px;
+        padding: 0 25px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Cards */
+    .card {
+        background: var(--bg-panel);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        transition: border-color 0.3s ease;
+    }
+
+    .card:hover {
+        border-color: rgba(211, 47, 47, 0.5);
+    }
+
+    .card h2 {
+        font-size: 1.4rem;
+        margin-bottom: 20px;
+        font-weight: 700;
+        color: var(--text-white);
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* User Cards */
+    .users {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 15px;
+    }
+
+    .user-card {
+        background: #121212;
+        padding: 20px 15px;
+        border-radius: 10px;
+        text-align: center;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .user-card h3 {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--text-grey);
+        text-transform: uppercase;
+    }
+
+    .user-card p {
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--text-white);
+        margin: 5px 0;
+        transition: color 0.3s;
+    }
+
+    .warning-text {
+        font-size: 0.8rem;
+        color: var(--glow-red);
+        font-weight: 900;
+        min-height: 1.2rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.4; }
+        100% { opacity: 1; }
+    }
+
+    /* Buttons */
+    .btn-group {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    button {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 900;
+        font-size: 1.2rem;
+        font-family: 'Poppins', sans-serif;
+        transition: all 0.2s;
+    }
+
+    .btn-minus {
+        background: #2a2a2a;
+        color: var(--text-white);
+        border: 1px solid #444;
+    }
+
+    .btn-minus:hover {
+        background: #444;
+    }
+
+    .btn-plus {
+        background: var(--primary-red);
+        color: var(--text-white);
+        box-shadow: 0 0 10px rgba(211, 47, 47, 0.4);
+    }
+
+    .btn-plus:hover {
+        background: var(--glow-red);
+        box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+    }
+
+    button:active {
+        transform: scale(0.9);
+    }
+
+    /* Analytics Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .stat-box {
+        background: #121212;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid var(--border-color);
+    }
+
+    .stat-box span {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--text-grey);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .stat-box strong {
+        font-size: 1.5rem;
+        color: var(--primary-red);
+        font-weight: 900;
+        display: block;
+        margin-top: 5px;
+    }
+
+    .breakdown-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .breakdown-item {
+        display: flex;
+        justify-content: space-between;
+        background: #121212;
+        padding: 12px 15px;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .breakdown-item span:last-child {
+        font-weight: 700;
+        color: var(--text-white);
+    }
+
+    /* Chart container */
+    .chart-box {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="header-container">
+    <h1>Vape <span>Tracker</span></h1>
+    <button class="btn-reset" onclick="resetAll()">Reset All Data</button>
+</div>
+
+<div class="wrapper">
+
+    <div class="card" style="grid-column: 1 / -1;">
+        <h2>👥 Users</h2>
+        <div class="users" id="users"></div>
+    </div>
+
+    <div class="card analytics">
+        <h2>📊 Stats Overview</h2>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span>Total Puffs</span>
+                <strong id="total">0</strong>
+            </div>
+            <div class="stat-box">
+                <span>Top User</span>
+                <strong id="topUser">-</strong>
+            </div>
+            <div class="stat-box">
+                <span>Avg / User</span>
+                <strong id="avgUser">0</strong>
+            </div>
+            <div class="stat-box">
+                <span>Last Active</span>
+                <strong id="lastActive" style="color: var(--text-white);">-</strong>
+            </div>
+        </div>
+        <div class="breakdown-list" id="breakdown"></div>
+    </div>
+
+    <div class="card">
+        <h2>🏆 Leaderboard</h2>
+        <div class="chart-box">
+            <canvas id="barChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🍩 Puff Distribution</h2>
+        <div class="chart-box">
+            <canvas id="doughnutChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🎯 Usage Intensity</h2>
+        <div class="chart-box">
+            <canvas id="polarChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card" style="grid-column: 1 / -1;">
+        <h2>📈 Total Usage Trend</h2>
+        <div class="chart-box">
+            <canvas id="lineChart"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// Register DataLabels plugin globally
+Chart.register(ChartDataLabels);
+
+// Global Chart Settings
+Chart.defaults.color = '#9e9e9e';
+Chart.defaults.font.family = "'Poppins', sans-serif";
+
+const names = ["Aryan", "Sameep", "Stavan", "Rahul", "Manish"];
+const themeColors = ['#ff0000', '#d32f2f', '#8b0000', '#555555', '#cccccc'];
+const HARMFUL_LIMIT = 15;
+
+let data = JSON.parse(localStorage.getItem("vapeData")) || {};
+let history = JSON.parse(localStorage.getItem("vapeHistory")) || [];
+
+names.forEach(name => {
+    if (!data[name]) data[name] = 0;
+});
+
+// UI Setup
+const usersDiv = document.getElementById("users");
+
+names.forEach(name => {
+    const div = document.createElement("div");
+    div.className = "user-card";
+
+    div.innerHTML = `
+        <h3>${name}</h3>
+        <p id="${name}">${data[name]}</p>
+        <div id="${name}-warning" class="warning-text"></div>
+        <div class="btn-group">
+            <button class="btn-minus" onclick="removePuff('${name}')">-</button>
+            <button class="btn-plus" onclick="addPuff('${name}')">+</button>
+        </div>
+    `;
+
+    usersDiv.appendChild(div);
+});
+
+// Calculate current total
+function getTotalPuffs() {
+    return Object.values(data).reduce((sum, val) => sum + val, 0);
+}
+
+// Add Puff
+function addPuff(name) {
+    data[name]++;
+    
+    history.push({
+        user: name,
+        action: 'add',
+        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}),
+        totalAtTime: getTotalPuffs()
+    });
+
+    save();
+    updateUI();
+}
+
+// Remove Puff
+function removePuff(name) {
+    if (data[name] > 0) {
+        data[name]--;
+        
+        history.push({
+            user: name,
+            action: 'remove',
+            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}),
+            totalAtTime: getTotalPuffs()
+        });
+
+        save();
+        updateUI();
+    }
+}
+
+// Reset All Data
+function resetAll() {
+    if (confirm("Are you sure you want to reset all data? This action cannot be undone.")) {
+        // Reset object values to 0
+        names.forEach(name => {
+            data[name] = 0;
+        });
+        // Clear history
+        history = [];
+        
+        save();
+        updateUI();
+    }
+}
+
+// Save
+function save() {
+    localStorage.setItem("vapeData", JSON.stringify(data));
+    localStorage.setItem("vapeHistory", JSON.stringify(history));
+}
+
+// Update UI + Charts
+function updateUI() {
+    let total = 0;
+    let maxUser = "-";
+    let maxVal = -1;
+
+    names.forEach(name => {
+        let countElement = document.getElementById(name);
+        let warningElement = document.getElementById(`${name}-warning`);
+        
+        countElement.innerText = data[name];
+        total += data[name];
+
+        // Harmful Limit Check
+        if (data[name] >= HARMFUL_LIMIT) {
+            countElement.style.color = "var(--glow-red)";
+            countElement.style.textShadow = "0 0 10px rgba(255, 0, 0, 0.5)";
+            warningElement.innerText = "⚠️ HARMFUL";
+        } else {
+            countElement.style.color = "var(--text-white)";
+            countElement.style.textShadow = "none";
+            warningElement.innerText = "";
+        }
+
+        if (data[name] > maxVal && data[name] > 0) {
+            maxVal = data[name];
+            maxUser = name;
+        }
+    });
+
+    document.getElementById("total").innerText = total;
+    document.getElementById("topUser").innerText = maxUser;
+    
+    // Average
+    document.getElementById("avgUser").innerText = (total / names.length).toFixed(1);
+
+    // Last Active
+    let lastActive = "-";
+    if (history.length > 0) {
+        const lastAdd = [...history].reverse().find(h => h.action === 'add');
+        if (lastAdd) lastActive = lastAdd.user;
+    }
+    document.getElementById("lastActive").innerText = lastActive;
+
+    // Breakdown
+    let html = "";
+    let sortedNames = [...names].sort((a, b) => data[b] - data[a]);
+    
+    sortedNames.forEach(n => {
+        let percent = total ? ((data[n]/total)*100).toFixed(1) : 0;
+        let warningIcon = data[n] >= HARMFUL_LIMIT ? '⚠️ ' : '';
+        html += `
+            <div class="breakdown-item">
+                <span>${warningIcon}${n}</span>
+                <span>${data[n]} <span style="color:#9e9e9e; font-size:0.8rem">(${percent}%)</span></span>
+            </div>
+        `;
+    });
+
+    document.getElementById("breakdown").innerHTML = html;
+
+    updateCharts();
+}
+
+// Charts
+let barChart, lineChart, doughnutChart, polarChart;
+
+function updateCharts() {
+    const values = names.map(n => data[n]);
+
+    // 1. BAR CHART
+    if (barChart) barChart.destroy();
+    barChart = new Chart(document.getElementById("barChart"), {
+        type: "bar",
+        data: {
+            labels: names,
+            datasets: [{
+                data: values,
+                backgroundColor: values.map(v => v >= HARMFUL_LIMIT ? '#ff0000' : '#d32f2f'), // Highlight harmful bars
+                borderColor: '#ff0000',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#333333' } },
+                x: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { display: false },
+                datalabels: {
+                    color: '#ffffff',
+                    anchor: 'end',
+                    align: 'top',
+                    font: { weight: 'bold', size: 14 },
+                    formatter: (value) => value > 0 ? value : ''
+                }
+            }
+        }
+    });
+
+    // 2. DOUGHNUT CHART
+    if (doughnutChart) doughnutChart.destroy();
+    doughnutChart = new Chart(document.getElementById("doughnutChart"), {
+        type: "doughnut",
+        data: {
+            labels: names,
+            datasets: [{
+                data: values,
+                backgroundColor: themeColors,
+                borderColor: '#171717',
+                borderWidth: 2,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right', labels: { color: '#ffffff' } },
+                datalabels: {
+                    color: '#ffffff',
+                    font: { weight: 'bold', size: 12 },
+                    formatter: (value) => value > 0 ? value : ''
+                }
+            }
+        }
+    });
+
+    // 3. POLAR AREA CHART
+    if (polarChart) polarChart.destroy();
+    polarChart = new Chart(document.getElementById("polarChart"), {
+        type: "polarArea",
+        data: {
+            labels: names,
+            datasets: [{
+                data: values,
+                backgroundColor: [
+                    'rgba(255, 0, 0, 0.6)', 
+                    'rgba(211, 47, 47, 0.6)', 
+                    'rgba(139, 0, 0, 0.6)', 
+                    'rgba(85, 85, 85, 0.6)', 
+                    'rgba(204, 204, 204, 0.6)'
+                ],
+                borderColor: themeColors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    ticks: { display: false },
+                    grid: { color: '#333333' },
+                    angleLines: { color: '#333333' }
+                }
+            },
+            plugins: {
+                legend: { position: 'right', labels: { color: '#ffffff' } },
+                datalabels: {
+                    color: '#ffffff',
+                    font: { weight: 'bold', size: 12 },
+                    formatter: (value) => value > 0 ? value : ''
+                }
+            }
+        }
+    });
+
+    // 4. LINE CHART 
+    const recentHistory = history.slice(-20);
+    const timeLabels = recentHistory.map(h => h.time);
+    const usageData = recentHistory.map(h => h.totalAtTime || 0);
+
+    if (lineChart) lineChart.destroy();
+    lineChart = new Chart(document.getElementById("lineChart"), {
+        type: "line",
+        data: {
+            labels: timeLabels,
+            datasets: [{
+                label: "Total Group Puffs",
+                data: usageData,
+                borderColor: '#ffffff',
+                backgroundColor: 'rgba(211, 47, 47, 0.2)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3, 
+                pointBackgroundColor: '#ff0000',
+                pointBorderColor: '#ffffff',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#333333' } },
+                x: { grid: { display: false }, ticks: { maxRotation: 45, minRotation: 45 } }
+            },
+            plugins: {
+                legend: { display: false },
+                datalabels: {
+                    color: '#ff0000',
+                    align: 'bottom',
+                    font: { weight: 'bold', size: 12 },
+                    formatter: (value, context) => {
+                        // Show label only if there's data and it's the last point
+                        if (usageData.length > 0 && context.dataIndex === context.dataset.data.length - 1) {
+                            return value;
+                        }
+                        return '';
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let h = recentHistory[context.dataIndex];
+                            if(!h) return '';
+                            let sign = h.action === 'remove' ? '-' : '+';
+                            return `Total: ${context.raw} (${h.user} ${sign}1)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Init
+updateUI();
+</script>
+
+</body>
+</html>
